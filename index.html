@@ -1,0 +1,478 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Happy Birthday Falak</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Dancing+Script:wght@400;600&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet">
+
+<style>
+  :root{ --gold:#d4af37; --pink-grad: linear-gradient(135deg, #fff0f5 0%, #e6e9f0 100%); }
+  html,body{height:100%; margin:0; font-family: 'Playfair Display', serif; overflow:hidden;}
+  
+  body{
+    display:flex; align-items:center; justify-content:center;
+    background: radial-gradient(circle at center, #1a0b2e 0%, #000000 100%);
+  }
+
+  /* --- CANVAS & BG --- */
+  .stage{
+    position:absolute; inset:0; z-index:1;
+    pointer-events:none;
+  }
+  canvas{ width:100%; height:100%; display:block; }
+
+  /* --- 1. START SCREEN --- */
+  .start-screen {
+    position:absolute; inset:0; z-index:100;
+    background: rgba(0,0,0,0.92);
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    cursor:pointer;
+    transition: opacity 0.8s ease;
+  }
+  .start-btn {
+    padding: 18px 45px;
+    border: 1px solid rgba(212, 175, 55, 0.5);
+    border-radius: 50px;
+    color: #fff; font-size: 20px; letter-spacing: 2px;
+    background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.2), transparent);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite linear;
+    transition: transform 0.3s, box-shadow 0.3s;
+    font-family: 'Playfair Display', serif;
+  }
+  .start-btn:hover { transform: scale(1.05); box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+
+  /* --- 2. INTRO TEXT --- */
+  .intro-text {
+    position:absolute; z-index:50;
+    text-align:center; color:white;
+    opacity:0; pointer-events:none;
+    transition: opacity 1s ease;
+  }
+  .intro-text h1 { font-weight:400; font-size:2.5rem; letter-spacing:1px; margin-bottom:10px; color: #fffaf0; }
+
+  /* --- 3. REVEAL (THE NAME) --- */
+  .reveal-text {
+    position:absolute; z-index:40;
+    text-align:center; top:45%; left:50%; transform:translate(-50%,-50%);
+    opacity:0; pointer-events:none;
+    transition: opacity 1s, transform 1s;
+  }
+  .reveal-text.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+  .reveal-text.hide { opacity:0; transform:translate(-50%,-60%) scale(1.1); }
+  
+  .sub-text { font-family:'Great Vibes', cursive; font-size:3rem; color:#ffddaa; text-shadow: 0 0 10px rgba(255,200,100,0.3); }
+  .main-name { 
+    font-family:'Great Vibes', cursive; font-size:7rem; line-height:1.1;
+    background: linear-gradient(to bottom, #fff, #ffb6c1);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 0 25px rgba(255,105,180,0.6));
+    animation: pulseName 3s infinite ease-in-out;
+  }
+
+  /* --- 4. THE CARD (Final Phase) --- */
+  .card-container {
+    position:absolute; z-index:60;
+    width:90%; max-width:600px; /* Slightly wider */
+    perspective: 1000px;
+    pointer-events:none;
+    opacity:0; transform:translateY(60px);
+    transition: all 1.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+  .card-container.visible { opacity:1; transform:translateY(0); pointer-events:auto; }
+
+  .card-inner {
+    /* Premium Gradient Background */
+    background: linear-gradient(180deg, #fffcf5 0%, #fff0f3 100%);
+    padding: 40px;
+    border-radius: 16px;
+    box-shadow: 
+      0 0 0 1px rgba(255,255,255,0.4) inset, /* Inner highlight */
+      0 0 0 6px rgba(255,255,255,0.1), /* Outer glass ring */
+      0 30px 60px rgba(0,0,0,0.8);    /* Deep shadow */
+    position: relative;
+    overflow: hidden;
+    text-align: left;
+    max-height: 85vh; overflow-y:auto;
+  }
+
+  /* Decorative Gold Border Pattern */
+  .card-inner::before {
+    content:''; position:absolute; inset:12px;
+    border: 2px solid rgba(212, 175, 55, 0.4); 
+    border-radius:10px;
+    pointer-events:none;
+  }
+
+  /* Corner Decorations */
+  .card-inner::after {
+    content:''; position:absolute; inset:16px;
+    border: 1px dashed rgba(212, 175, 55, 0.2);
+    border-radius:8px;
+    pointer-events:none;
+  }
+
+  /* Header Image with style */
+  .card-img {
+    width: 100%; height: 200px;
+    object-fit: cover;
+    border-radius: 8px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    /* Beautiful Cake Image */
+    background: url('https://images.unsplash.com/photo-1558301211-0d8c8ddee6ec?q=80&w=1000&auto=format&fit=crop') center 40%/cover;
+    position: relative;
+  }
+  
+  /* Image Overlay Gradient */
+  .card-img::after {
+    content:''; position:absolute; inset:0;
+    background: linear-gradient(to top, rgba(0,0,0,0.2), transparent);
+    border-radius: 8px;
+  }
+
+  .card-content {
+    font-family: 'Dancing Script', cursive;
+    font-size: 1.5rem;
+    line-height: 1.6;
+    color: #444;
+  }
+
+  .greeting {
+    font-family: 'Great Vibes', cursive;
+    font-size: 2.5rem;
+    color: #d46a6a;
+    margin-bottom: 10px;
+  }
+
+  .card-content p { margin-bottom: 15px; }
+  .highlight { color: #d63384; font-weight:bold; }
+  .signature { 
+    text-align:right; font-size:2rem; color:#d46a6a; margin-top:30px; 
+    font-family: 'Great Vibes', cursive;
+  }
+  .disclaimer { 
+    font-family: 'Playfair Display', serif; font-size: 0.75rem; 
+    color: #aaa; margin-top: 30px; text-align: center; 
+    border-top:1px dashed #e0c080; padding-top:10px; font-style:italic;
+  }
+
+  /* --- ANIMATIONS --- */
+  @keyframes shimmer { 0%{background-position: 200% 0;} 100%{background-position: -200% 0;} }
+  @keyframes pulseName { 0%,100%{ transform:scale(1); } 50%{ transform:scale(1.02); filter: drop-shadow(0 0 35px rgba(255,105,180,0.8)); } }
+
+  /* Scrollbar */
+  .card-inner::-webkit-scrollbar { width:6px; }
+  .card-inner::-webkit-scrollbar-track { background: transparent; }
+  .card-inner::-webkit-scrollbar-thumb { background:#e0c080; border-radius:3px; }
+
+</style>
+</head>
+<body>
+
+  <audio id="bgMusic" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2021/11/24/audio_8231904174.mp3?filename=piano-moment-11632.mp3" type="audio/mp3">
+  </audio>
+
+  <div class="start-screen" id="startScreen" onclick="startExperience()">
+    <div style="font-size:5rem; margin-bottom:20px; filter: drop-shadow(0 0 20px rgba(255,255,255,0.5));">✨</div>
+    <div class="start-btn">Tap to Open Gift</div>
+  </div>
+
+  <div class="intro-text" id="introText">
+    <h1>So... are you ready?</h1>
+    <p style="font-family:'Dancing Script'; font-size:1.5rem; opacity:0.8;">Something special is coming...</p>
+  </div>
+
+  <div class="reveal-text" id="revealText">
+    <div class="sub-text">Happy Birthday to the purest soul</div>
+    <div class="main-name">FALAK</div>
+  </div>
+
+  <div class="card-container" id="finalCard">
+    <div class="card-inner">
+      <div class="card-img"></div>
+      
+      <div class="card-content">
+        <div class="greeting">To Falak,</div>
+        
+        <p>First of all... thank you. Not just a normal thank you, but a genuine <strong>dil thi thank you</strong> so much for everything. You have listened to my endless complaints, handled my negative thoughts, and literally pushed me through my placement journey when I wanted to give up. Seriously, just thank you is not enough for that.</p>
+        
+        <p>I am so grateful for having you as a friend-cum-angel. I just wish and pray that in this upcoming year, you get everything you might have missed out on. May you get all the happiness you deserve (and yes, the best husband too... <span class="highlight">but 2-3 years pachi!</span>).</p>
+        
+        <p>You know <em>hu etli sari nthi writing</em> so kai miss out thai gyu to sorry, but I hope you feel my love in this message. Happy Birthday, yaar.</p>
+        
+        <p>And please, one last thing:<br>
+        Trust yourself. <span class="highlight">YOU ARE NOT ALWAYS WRONG.</span> Stop doubting yourself, okay?</p>
+        
+        <div class="signature">Khushi</div>
+
+        <div class="disclaimer">
+          (Disclaimer: I have done this with help from AI because mane jaju nathi aavdtu, but the feelings are 100% mine!)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="stage">
+    <canvas id="c"></canvas>
+  </div>
+
+<script>
+/* TIMELINE:
+  1. Click Start -> Music On, Stars Init
+  2. Intro Text (4s)
+  3. Reveal Name (Balloons + Confetti) (8s)
+  4. Card Floats Up
+*/
+
+const canvas = document.getElementById('c');
+const ctx = canvas.getContext('2d');
+let W = canvas.width = window.innerWidth;
+let H = canvas.height = window.innerHeight;
+
+// Elements
+const startScreen = document.getElementById('startScreen');
+const introText = document.getElementById('introText');
+const revealText = document.getElementById('revealText');
+const finalCard = document.getElementById('finalCard');
+const bgMusic = document.getElementById('bgMusic');
+
+// Animation State
+let balloons = [];
+let confetti = [];
+let stars = [];
+let phase = 0; // 0:Wait, 1:Intro, 2:Reveal, 3:Card
+
+// --- RESIZE ---
+window.addEventListener('resize', () => {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  initStars();
+});
+
+// --- UTILS ---
+const rand = (min,max) => Math.random()*(max-min)+min;
+const colorPallete = ["#ff718d", "#fdbb2d", "#22c1c3", "#ff9a9e", "#a18cd1"];
+
+// --- 1. STARS BACKGROUND ---
+function initStars() {
+  stars = [];
+  for(let i=0; i<200; i++){
+    stars.push({
+      x: rand(0,W), y: rand(0,H),
+      size: rand(0.5, 2.5),
+      alpha: rand(0.1, 0.8),
+      twinkleSpeed: rand(0.005, 0.02)
+    });
+  }
+}
+
+function drawStars() {
+  ctx.fillStyle = "white";
+  stars.forEach(s => {
+    s.alpha += s.twinkleSpeed;
+    if(s.alpha > 1 || s.alpha < 0.1) s.twinkleSpeed *= -1;
+    ctx.globalAlpha = Math.abs(s.alpha);
+    ctx.beginPath(); ctx.arc(s.x, s.y, s.size, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// --- 2. BALLOONS ---
+function spawnBalloon() {
+  balloons.push({
+    x: rand(50, W-50),
+    y: H + 100,
+    r: rand(30, 50),
+    speed: rand(2, 6),
+    color: colorPallete[Math.floor(rand(0,colorPallete.length))],
+    swing: rand(0, 100),
+    swingSpeed: rand(0.02, 0.05)
+  });
+}
+
+function drawBalloons() {
+  balloons.forEach((b, index) => {
+    b.y -= b.speed;
+    b.swing += b.swingSpeed;
+    let x = b.x + Math.sin(b.swing)*20;
+
+    // Draw balloon
+    ctx.fillStyle = b.color;
+    ctx.beginPath();
+    ctx.ellipse(x, b.y, b.r, b.r*1.2, 0, 0, Math.PI*2);
+    ctx.fill();
+    
+    // String
+    ctx.strokeStyle = "rgba(255,255,255,0.3)";
+    ctx.beginPath(); ctx.moveTo(x, b.y+b.r*1.2); ctx.lineTo(x, b.y+b.r*1.2+60); ctx.stroke();
+
+    // Highlight
+    ctx.fillStyle = "rgba(255,255,255,0.2)";
+    ctx.beginPath(); ctx.ellipse(x-b.r*0.3, b.y-b.r*0.3, b.r*0.2, b.r*0.1, -0.5, 0, Math.PI*2); ctx.fill();
+
+    // Remove off-screen
+    if(b.y < -150) balloons.splice(index, 1);
+  });
+}
+
+// --- 3. CONFETTI ---
+function burstConfetti() {
+  for(let i=0; i<150; i++) {
+    confetti.push({
+      x: W/2, y: H/2,
+      vx: rand(-15, 15), vy: rand(-15, 15),
+      color: colorPallete[Math.floor(rand(0,colorPallete.length))],
+      size: rand(5, 12),
+      life: 120
+    });
+  }
+}
+
+function drawConfetti() {
+  confetti.forEach((c, index) => {
+    c.x += c.vx;
+    c.y += c.vy;
+    c.vy += 0.2; // Gravity
+    c.life--;
+    
+    ctx.fillStyle = c.color;
+    ctx.fillRect(c.x, c.y, c.size, c.size);
+
+    if(c.life <= 0) confetti.splice(index, 1);
+  });
+}
+
+// --- BIRTHDAY MELODY (WebAudio) ---
+// Simple Happy Birthday melody using Web Audio API
+let audioCtx = null;
+
+const noteFrequencies = {
+  'C4': 261.63, 'D4': 293.66, 'E4': 329.63, 'F4': 349.23, 'G4': 392.00, 'A4': 440.00, 'B4': 493.88,
+  'C5': 523.25, 'D5': 587.33, 'E5': 659.25, 'F5': 698.46, 'G5': 783.99
+};
+
+// Melody (notes and durations in ms) - "Happy Birthday" simplified
+const melody = [
+  ['G4', 400], ['G4', 300], ['A4', 700], ['G4', 700], ['C5', 700], ['B4', 1400],
+  ['G4', 400], ['G4', 300], ['A4', 700], ['G4', 700], ['D5', 700], ['C5', 1400],
+  ['G4', 400], ['G4', 300], ['G5', 700], ['E5', 700], ['C5', 700], ['B4', 700], ['A4', 1400],
+  ['F5', 400], ['F5', 300], ['E5', 700], ['C5', 700], ['D5', 700], ['C5', 1400]
+];
+
+function ensureAudioContext() {
+  if (!audioCtx) {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+// Play a single note with small envelope
+function playNote(freq, startTime, duration) {
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.exponentialRampToValueAtTime(0.2, startTime + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration/1000 - 0.02);
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start(startTime);
+  osc.stop(startTime + duration/1000);
+}
+
+// Play the melody sequence once
+function playBirthdayMelody() {
+  try {
+    ensureAudioContext();
+    const now = audioCtx.currentTime + 0.05;
+    let t = now;
+    for (let i = 0; i < melody.length; i++) {
+      const [note, dur] = melody[i];
+      const freq = noteFrequencies[note] || 440;
+      playNote(freq, t, dur);
+      t += dur / 1000;
+    }
+  } catch (e) {
+    console.warn("Melody playback failed:", e);
+  }
+}
+
+// --- MAIN LOOP ---
+function animate() {
+  ctx.clearRect(0,0,W,H);
+  drawStars();
+  
+  if(phase >= 2) { // Reveal phase onwards
+    drawBalloons();
+    drawConfetti();
+  }
+
+  requestAnimationFrame(animate);
+}
+
+// --- SEQUENCE CONTROLLER ---
+let balloonIntervalId = null;
+function startExperience() {
+  // 1. Play Music & Hide Start Screen
+  bgMusic.volume = 0.6; 
+  bgMusic.play().then(() => {
+    console.log("Music Playing");
+  }).catch(e => console.log("Audio block: " + e));
+
+  startScreen.style.opacity = '0';
+  setTimeout(() => startScreen.remove(), 800);
+
+  // 2. Start Intro (Wait 1s)
+  setTimeout(() => {
+    phase = 1;
+    introText.style.opacity = '1';
+  }, 1000);
+
+  // 3. Start Reveal (After 5s total)
+  setTimeout(() => {
+    introText.style.opacity = '0';
+    setTimeout(() => {
+      phase = 2;
+      revealText.classList.add('show');
+      
+      // Burst Confetti & Start Balloon Loop
+      burstConfetti();
+      balloonIntervalId = setInterval(spawnBalloon, 300); // Faster balloons
+
+      // Play birthday melody on reveal
+      playBirthdayMelody();
+    }, 1000);
+  }, 5000);
+
+  // 4. Show Card (After 13s total)
+  setTimeout(() => {
+    // Hide Name
+    revealText.classList.remove('show');
+    revealText.classList.add('hide');
+
+    // Show Card
+    setTimeout(() => {
+      phase = 3;
+      finalCard.classList.add('visible');
+
+      // Play melody again when card appears (gentle repeat)
+      setTimeout(() => {
+        playBirthdayMelody();
+      }, 300); // tiny delay
+    }, 1000);
+  }, 13000);
+}
+
+// Init
+initStars();
+animate();
+
+</script>
+</body>
+</html>
